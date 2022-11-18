@@ -6,5 +6,13 @@
         "/home/itsamewolf/colcon_ws/install/open_manipulator_msgs/lib/python3.8/site-packages",
         "/home/itsamewolf/colcon_ws/install/dynamixel_sdk_custom_interfaces/lib/python3.8/site-packages",
         "/opt/ros/foxy/lib/python3.8/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/itsamewolf/loopo_ws/install/realsense2_camera_msgs/lib/python3.8/site-packages",
+        "/home/itsamewolf/colcon_ws/build/open_manipulator_x_teleop",
+        "/home/itsamewolf/colcon_ws/install/open_manipulator_x_teleop/lib/python3.8/site-packages",
+        "/home/itsamewolf/colcon_ws/install/open_manipulator_msgs/lib/python3.8/site-packages",
+        "/home/itsamewolf/colcon_ws/install/dynamixel_sdk_custom_interfaces/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
     ]
 }
