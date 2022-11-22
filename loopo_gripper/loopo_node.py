@@ -1,76 +1,131 @@
+#!/usr/bin/env python3
+
 from loopo_gripper.LoopO_driver import *
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 
 from std_msgs.msg import Float32, Int32, Bool
 
-class LoopOnode(Node):
+gripper = loopo_driver()
 
+node_update_timer_cb_group = ReentrantCallbackGroup()
+loopo_update_timer_cb_group = MutuallyExclusiveCallbackGroup()
+
+class LoopOUpdaterNode(Node):
     def __init__(self):
-        super().__init__('loopo_node')
-        self.gripper = loopo_driver()
-        self.ex_endtsop_publisher = self.create_publisher(Bool, 'loopo_gripper/ex_endstop', 10)
-        self.tw_endtsop_publisher = self.create_publisher(Bool, 'loopo_gripper/tw_endstop', 10)
-        self.tr_runout_publisher = self.create_publisher(Bool, 'loopo_gripper/tr_endstop', 10)
-        self.tl_runout_publisher = self.create_publisher(Bool, 'loopo_gripper/tl_endstop', 10)
-        self.lp_runout_publisher = self.create_publisher(Bool, 'loopo_gripper/lp_endstop', 10)
-        self.force_publisher = self.create_publisher(Float32, 'loopo_gripper/force', 10)
-        self.ex_position_publisher = self.create_publisher(Int32, 'loopo_gripper/ex_position', 10)
-        self.tr_position_publisher = self.create_publisher(Int32, 'loopo_gripper/tr_position', 10)
-        self.tl_position_publisher = self.create_publisher(Int32, 'loopo_gripper/tl_position', 10)
-        self.lp_position_publisher = self.create_publisher(Int32, 'loopo_gripper/lp_position', 10)
-        timer_period = 0.1
-        update_period = 0.5
-        self.timer = self.create_timer(timer_period,self.timer_callback)
-        self.update_timer = self.create_timer(update_period,self.update_callback)
+        super().__init__('loopo_updater')
 
+        update_period = 0.01
+        self.update_timer = self.create_timer(update_period,self.update_callback, callback_group = loopo_update_timer_cb_group)
+    
+    def update_callback(self):
+        gripper.update()
+
+
+class LoopOExtensionNode(Node):
+    def __init__(self):
+        super().__init__('loopo_extension_node')
+        self.endtsop_publisher = self.create_publisher(Bool, 'loopo/extension/endstop', 10, callback_group = node_update_timer_cb_group)
+        self.position_publisher = self.create_publisher(Int32, 'loopo/extension/position', 10, callback_group = node_update_timer_cb_group)
+
+        timer_period = 0.1
+        self.timer = self.create_timer(timer_period,self.timer_callback, callback_group = loopo_update_timer_cb_group)
+    
+    def timer_callback(self):
+        endstop = Bool()
+        position = Int32()
+
+        endstop.data = gripper.ex_endstop
+        position.data = gripper.ex_position
+
+        self.endtsop_publisher.publish(endstop)
+        self.position_publisher.publish(position)
+    
+        
+class LoopOTwistNode(Node):
+    def __init__(self):
+        super().__init__('loopo_twist_node')
+        self.endtsop_publisher = self.create_publisher(Bool, 'loopo/twist/endstop', 10, callback_group = node_update_timer_cb_group)
+        self.right_runout_publisher = self.create_publisher(Bool, 'loopo/twist/right/runout', 10, callback_group = node_update_timer_cb_group)
+        self.left_runout_publisher = self.create_publisher(Bool, 'loopo/twist/left/runout', 10, callback_group = node_update_timer_cb_group)
+        self.right_position_publisher = self.create_publisher(Int32, 'loopo/twist/right/position', 10, callback_group = node_update_timer_cb_group)
+        self.left_position_publisher = self.create_publisher(Int32, 'loopo/twist/left/position', 10, callback_group = node_update_timer_cb_group)
+
+        timer_period = 0.1
+        self.timer = self.create_timer(timer_period,self.timer_callback, callback_group = loopo_update_timer_cb_group)
+
+    
+    def timer_callback(self):
+        endstop = Bool()
+        right_runout = Bool()
+        left_runout = Bool()
+        right_position = Int32()
+        left_position = Int32()
+
+        endstop.data = gripper.tw_endstop
+        right_runout.data = gripper.tr_runout
+        left_runout.data = gripper.tl_runout
+        right_position.data = gripper.tr_position
+        left_position.data = gripper.tl_position
+
+        self.endtsop_publisher.publish(endstop)
+        self.right_runout_publisher.publish(right_runout) 
+        self.left_runout_publisher.publish(left_runout) 
+        self.right_position_publisher.publish(left_position)
+        self.left_position_publisher.publish(left_position)
+
+
+class LoopOLoopNode(Node):
+    def __init__(self):
+        super().__init__('loopo_loop_node')
+        self.runout_publisher = self.create_publisher(Bool, 'loopo/loop/runout', 10, callback_group = node_update_timer_cb_group)
+        self.force_publisher = self.create_publisher(Float32, 'loopo/loop/force', 10, callback_group = node_update_timer_cb_group)
+        self.position_publisher = self.create_publisher(Int32, 'loopo/loop/position', 10, callback_group = node_update_timer_cb_group)
+        timer_period = 0.1
+        self.timer = self.create_timer(timer_period,self.timer_callback, callback_group = loopo_update_timer_cb_group)
 
     def timer_callback(self):
-        self.gripper.update()
-        ex_endstop = Bool()
-        tw_endstop = Bool()
-        tr_runout = Bool()
-        tl_runout = Bool()
-        lp_runout = Bool()
+
+        runout = Bool()
         force = Float32()
-        ex_position = Int32()
-        tr_position = Int32()
-        tl_position = Int32()
-        lp_position = Int32()
+        position = Int32()
 
-        ex_endstop.data = self.gripper.ex_endstop
-        tw_endstop.data = self.gripper.tw_endstop
-        tr_runout.data = self.gripper.tr_runout
-        tl_runout.data = self.gripper.tl_runout
-        lp_runout.data = self.gripper.lp_runout
-        force.data = self.gripper.force
-        ex_position.data = self.gripper.ex_position
-        tr_position.data = self.gripper.tr_position
-        tl_position.data = self.gripper.tl_position
-        lp_position.data = self.gripper.lp_position
+        print(gripper.force)
 
-        self.ex_endtsop_publisher.publish(ex_endstop)
-        self.tw_endtsop_publisher.publish(tw_endstop)
-        self.tr_runout_publisher.publish(tr_runout) 
-        self.tl_runout_publisher.publish(tl_runout) 
-        self.lp_runout_publisher.publish(lp_runout)
+        runout.data = gripper.lp_runout
+        force.data = gripper.force
+        position.data = gripper.lp_position
+
+        self.runout_publisher.publish(runout)
         self.force_publisher.publish(force)
-        self.ex_position_publisher.publish(ex_position)
-        self.tr_position_publisher.publish(tl_position)
-        self.tl_position_publisher.publish(tl_position)
-        self.lp_position_publisher.publish(lp_position)
+        self.position_publisher.publish(position)
 
-    def update_callback(self):
-        self.gripper.update()
 
 def main(args=None):
     rclpy.init(args=args)
 
-    loopo_node = LoopOnode()
+    executor = MultiThreadedExecutor()
+    #executor = SingleThreadedExecutor()
 
-    rclpy.spin(loopo_node)
+    loopo_updater_nodelet = LoopOUpdaterNode()
+    loopo_extension_nodelet = LoopOExtensionNode()
+    loopo_twist_nodelet = LoopOTwistNode()
+    loopo_loop_nodelet = LoopOLoopNode()
 
-    loopo_node.destroy_node()
+    executor.add_node(loopo_updater_nodelet)
+    executor.add_node(loopo_extension_nodelet)    
+    executor.add_node(loopo_twist_nodelet)
+    executor.add_node(loopo_loop_nodelet)
+
+    rclpy.spin(executor)
+    
+    loopo_updater_nodelet.destroy_node()
+    loopo_extension_nodelet.destroy_node()
+    loopo_twist_nodelet.destroy_node()
+    loopo_loop_nodelet.destroy_node()
+
     rclpy.shutdown()
 
 if __name__ == '__main__':
