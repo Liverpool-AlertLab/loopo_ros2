@@ -128,3 +128,4 @@ fabric.properties
 .vscode/
 install/
 log/
+__pycache__/
