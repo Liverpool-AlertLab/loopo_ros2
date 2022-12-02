@@ -25,26 +25,19 @@ class loopo_driver:
             self._baud = baud
             self._serial_interface = serial.Serial(self._com_port, self._baud, timeout=1)
 
-            self.ex_endstop = False
-            self.tw_endstop = False
-            self.tr_runout = False
-            self.tl_runout = False
-            self.lp_runout = False
-            self.force = 0.53
             self.ex_position = 0
-            self.tr_position = 0
-            self.tl_position = 0
+            self.ex_status = 0
+            self.ex_control = 0
+
+            self.tw_position = 0
+            self.tw_offset = 0
+            self.tw_statuts = 0
+            self.tw_control = 0
+
             self.lp_position = 0
-
-            self.ex_torque_flag = 0
-            self.tr_torque_flag = 0
-            self.tl_torque_flag = 0
-            self.lp_torque_flag = 0
-
-            self.ex_control_flag = 0
-            self.tr_control_flag = 0
-            self.tl_control_flag = 0
-            self.lp_control_flag = 0
+            self.force = 0.53
+            self.lp_status = 0
+            self.lp_control = 0
 
             self.ack = 0
 
@@ -57,21 +50,26 @@ class loopo_driver:
             line = self._serial_interface.readline().decode('ascii').rstrip()
             values = re.findall(r'\d+(?:\.\d+)?',line)
 
-            self.ex_endstop = bool(int(values[0]))
-            self.tw_endstop = bool(int(values[1]))
-            self.tr_runout = bool(int(values[4]))
-            self.tl_runout = bool(int(values[3]))
-            self.lp_runout = bool(int(values[2]))
-            self.force = float(values[5])
+            if (len(values)>0):
+                print(line)
+                print(values)
+                
+                self.ex_position = int(line[0])
+                self.ex_status = int(values[1])
+                self.ex_control = int(values[2])
 
-            self.ex_position = int(values[6])
-            self.tr_position = int(values[7])
-            self.tl_position = int(values[8])
-            self.lp_position = int(values[9])
+                self.tw_position = int(values[3])
+                self.tw_offset = int(values[4])
+                self.tw_statuts = int(values[5])
+                self.tw_control = int(values[6])
 
-            self.ack = bool(int(values[10]))
-            #print(line)
-            print(values)
+                self.lp_position = int(values[7])
+                self.force = float(values[8])
+                self.lp_status = int(values[9])
+                self.lp_control = int(values[10])
+
+                self.ack = bool(int(values[11]))
+
 
     def send_command(self, id, command, value):
         command = str(id) + str(command) + str(value) + "\n"

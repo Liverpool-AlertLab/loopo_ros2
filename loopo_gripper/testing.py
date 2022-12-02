@@ -31,8 +31,8 @@ def foreground():
     #loopo.home_extension(4)
     #loopo.move_extension(5000)
     #loopo.move_extension(1000)
-    loopo.home_twist(4)
-    loopo.change_twist_loop_length(3000)
+    #loopo.home_twist(4)
+    #loopo.change_twist_loop_length(3000)
 
 b = threading.Thread(name='background', target = backgroung)
 f = threading.Thread(name='forground', target=foreground)
