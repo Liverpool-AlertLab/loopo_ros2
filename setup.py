@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts':[
-            "gripper_interface = loopo_gripper.loopo_node:main"
+            "gripper_nodelets = loopo_gripper.loopo_node:main",
+            "loopo_interface_node = loopo_gripper.loopo_interface_node:main"
         ]
     },
 )

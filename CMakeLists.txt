@@ -19,6 +19,7 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/SendLoopOCommand.srv"
   "srv/EnableDisableActuator.srv"
   "action/Home.action"
   "action/MoveTo.action"
