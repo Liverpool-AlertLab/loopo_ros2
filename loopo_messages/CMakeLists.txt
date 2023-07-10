@@ -17,12 +17,7 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/ExtensionActuatorUpdate.msg"
-  "msg/TwistActuatorUpdate.msg"
-  "msg/LoopActuatorUpdate.msg"
-  "msg/LoopOCommand.msg"
-  "srv/SendLoopOCommand.srv"
-  "srv/EnableDisableActuator.srv"
+  "srv/SendCommand.srv"
   "action/Home.action"
   "action/MoveTo.action"
   DEPENDENCIES std_msgs

@@ -1,0 +1,17 @@
+int8    id
+int8    command
+float32 value
+---
+int32   ex_position
+int8    ex_status
+int8    ex_control
+
+int32   tw_size
+int32   tw_offset
+int8    tw_status
+int8    tw_control
+
+int32   lp_size
+float32 lp_force
+int8    lp_status
+int8    lp_control
