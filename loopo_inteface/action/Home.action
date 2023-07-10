@@ -1,7 +1,0 @@
-float32 speed
----
-bool    is_homed
-string  error_message
----
-float32 elapsed_time
-float32 distance_moved
