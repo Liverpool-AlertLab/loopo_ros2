@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(loopo_gripper)
+project(loopo_driver)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -12,18 +12,8 @@ endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/EnableDisableActuator.srv"
-  "action/Home.action"
-  "action/MoveTo.action"
-  DEPENDENCIES std_msgs
-)
 
 # Include Cpp "include" directory
 include_directories(include)

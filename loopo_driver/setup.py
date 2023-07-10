@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'loopo_gripper'
+package_name = 'loopo_driver'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts':[
-            "gripper_interface = loopo_gripper.loopo_node:main"
+            "loopo_driver_node = loopo_driver.loopo_driver_node:main",
         ]
     },
 )
