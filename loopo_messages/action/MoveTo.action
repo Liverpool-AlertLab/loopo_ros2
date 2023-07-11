@@ -1,8 +1,0 @@
-float32 target
-float32 tolerance
----
-bool   target_reached
-float32 status
-string  error_message
----
-float32 status

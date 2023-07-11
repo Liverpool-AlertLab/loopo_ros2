@@ -1,0 +1,8 @@
+float width
+float force
+---
+bool success
+string error
+---
+float current_width
+float current_force
