@@ -1,5 +1,4 @@
 float32 target
-float32 tolerance
 ---
 bool   success
 string  error
