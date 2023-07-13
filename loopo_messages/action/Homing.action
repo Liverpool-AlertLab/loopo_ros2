@@ -1,7 +1,6 @@
 float32 speed
 ---
-bool    succes
+bool    success
 string  error
 ---
-float32 elapsed_time
-float32 current_width
+float32 current_position
