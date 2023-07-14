@@ -160,13 +160,11 @@ class LoopOActionServers(Node):
         result = Move.Result()
         self.gripper.send_command(2, 3, self.goal)
         self.gripper.send_command(0, 0, 0.0)
-
         feedback.current_position = float(self.gripper.tw_size)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.tw_status == 3:
             self.gripper.send_command(0, 0, 0.0)
-
             feedback.current_position = float(self.gripper.tw_size)
             goal_handle.publish_feedback(feedback)
 
@@ -306,7 +304,7 @@ class LoopOActionServers(Node):
         self.gripper.send_command(0, 0, 0.0)
         if self.gripper.lp_status == 0:
             self.gripper.send_command(3, 0, 1.0)
-        if self.gripper.lp_control != 1:
+        if self.gripper.lp_control != 3:
             self.gripper.send_command(3, 1, 3.0)
 
     def loop_move_callback(self, goal_handle):
@@ -345,6 +343,7 @@ class LoopOActionServers(Node):
         return result
 
     def loop_home_callback(self, goal_handle):
+        self.loop_is_position_ready()
         self.goal = float(goal_handle.request.speed)
         feedback = Homing.Feedback()
         result = Homing.Result()
@@ -354,6 +353,7 @@ class LoopOActionServers(Node):
 
         while self.gripper.lp_status == 2:
             self.gripper.send_command(0, 0, 0.0)
+            feedback.current_position = float(self.gripper.lp_size)
             goal_handle.publish_feedback(feedback)
 
         if self.gripper.lp_status == 1:
@@ -398,17 +398,18 @@ class LoopOActionServers(Node):
             result.error = "Loop hit the endstop"
             goal_handle.abort()
 
-        self.gripper.send_comand(3, 6, self.goal_force)
+        self.gripper.send_command(3, 6, self.goal_force)
         self.loop_is_force_ready()
 
-        while self.gripper.lp_status != 6:
+        while self.gripper.force < self.goal_force:
             self.gripper.send_command(0, 0, 0.0)
+
             feedback.current_width = float(self.gripper.lp_size)
             feedback.current_force = float(self.gripper.force)
             goal_handle.publish_feedback(feedback)
 
         result.success = True
-        result.error = "Loop is stuck"
+        result.error = ""
         self.get_logger().info("Error: %s" % (result.error))
         goal_handle.succeed()
 
