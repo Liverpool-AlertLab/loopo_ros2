@@ -1,0 +1,8 @@
+float32 width
+float32 force
+---
+bool success
+string error
+---
+float32 current_width
+float32 current_force

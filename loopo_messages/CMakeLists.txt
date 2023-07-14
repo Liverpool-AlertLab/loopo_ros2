@@ -18,8 +18,10 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SendCommand.srv"
-  "action/Home.action"
-  "action/MoveTo.action"
+  "action/Homing.action"
+  "action/Move.action"
+  "action/Grasp.action"
+  "action/Twist.action"
   DEPENDENCIES std_msgs
 )
 
