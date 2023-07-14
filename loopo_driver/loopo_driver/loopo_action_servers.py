@@ -47,10 +47,32 @@ class LoopOActionServers(Node):
         )
 
         self.twist_twist_action_server = ActionServer(
-            self, Grasp, self.twist_twist_callback
+            self, Twist, "twist_twist", self.twist_twist_callback
         )
 
         self.get_logger().info("Loop-O action servers started and ready.")
+
+    def debug_tw(self):
+        self.get_logger().info(
+            "status: %d, control: %d, size: %f, offeset: %f"
+            % (
+                self.gripper.tw_status,
+                self.gripper.tw_control,
+                self.gripper.tw_size,
+                self.gripper.tw_offset,
+            )
+        )
+
+    def debug_lp(self):
+        self.get_logger().info(
+            "status: %d, control: %d, size: %f, force: %f"
+            % (
+                self.gripper.lp_status,
+                self.gripper.lp_control,
+                self.gripper.lp_size,
+                self.gripper.force,
+            )
+        )
 
     def extension_is_position_ready(self):
         self.gripper.send_command(0, 0, 0.0)
@@ -66,11 +88,13 @@ class LoopOActionServers(Node):
         result = Move.Result()
         self.gripper.send_command(1, 3, self.goal)
         self.gripper.send_command(0, 0, 0.0)
+
         feedback.current_position = float(self.gripper.ex_position)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.ex_status == 3:
             self.gripper.send_command(0, 0, 0.0)
+
             feedback.current_position = float(self.gripper.ex_position)
             goal_handle.publish_feedback(feedback)
 
@@ -124,9 +148,9 @@ class LoopOActionServers(Node):
 
     def twist_is_position_ready(self):
         self.gripper.send_command(0, 0, 0.0)
-        if self.gripper.lp_status == 0:
+        if self.gripper.tw_status == 0:
             self.gripper.send_command(2, 0, 1.0)
-        if self.gripper.lp_control != 1:
+        if self.gripper.tw_control != 1:
             self.gripper.send_command(2, 1, 1.0)
 
     def twist_move_callback(self, goal_handle):
@@ -136,12 +160,14 @@ class LoopOActionServers(Node):
         result = Move.Result()
         self.gripper.send_command(2, 3, self.goal)
         self.gripper.send_command(0, 0, 0.0)
-        feedback.current_position = float(self.gripper.tw_position)
+
+        feedback.current_position = float(self.gripper.tw_size)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.tw_status == 3:
             self.gripper.send_command(0, 0, 0.0)
-            feedback.current_position = float(self.gripper.tw_position)
+
+            feedback.current_position = float(self.gripper.tw_size)
             goal_handle.publish_feedback(feedback)
 
         if self.gripper.tw_status == 1:
@@ -168,11 +194,13 @@ class LoopOActionServers(Node):
         feedback = Homing.Feedback()
         result = Homing.Result()
         self.gripper.send_command(2, 5, self.goal)
-        feedback.current_position = float(self.gripper.tw_position)
+        feedback.current_position = float(self.gripper.tw_size)
         goal_handle.publish_feedback(feedback)
+        self.gripper.send_command(0, 0, 0)
 
         while self.gripper.tw_status == 2:
             self.gripper.send_command(0, 0, 0.0)
+            feedback.current_position = float(self.gripper.tw_size)
             goal_handle.publish_feedback(feedback)
 
         if self.gripper.tw_status == 1:
@@ -197,26 +225,29 @@ class LoopOActionServers(Node):
         feedback = Grasp.Feedback()
         result = Grasp.Result()
         self.gripper.send_command(2, 3, self.goal_width)
+
         self.gripper.send_command(0, 0, 0.0)
-        feedback.current_width = float(self.gripper.tw_position)
+
+        feedback.current_width = float(self.gripper.tw_size)
         feedback.current_force = 0.0
         goal_handle.publish_feedback(feedback)
 
-        while self.gripper.lp_status == 3:
+        while self.gripper.tw_status == 3:
             self.gripper.send_command(0, 0, 0.0)
-            feedback.current_width = float(self.gripper.lp_position)
+
+            feedback.current_width = float(self.gripper.tw_size)
             feedback.current_force = 0.0
             goal_handle.publish_feedback(feedback)
 
-        if self.gripper.lp_status == 1:
-            result.success = False
-            result.error = "Twist is not gripping"
-            goal_handle.abort()
-        elif self.gripper.lp_status == 2:
+        if self.gripper.tw_status == 1:
+            result.success = True
+            result.error = ""
+            goal_handle.succeed()
+        elif self.gripper.tw_status == 2:
             result.success = False
             result.error = "Loop is homing"
             goal_handle.abort()
-        elif self.gripper.lp_status == 4:
+        elif self.gripper.tw_status == 4:
             result.success = False
             result.error = "Loop hit the endstop"
             goal_handle.abort()
@@ -233,12 +264,15 @@ class LoopOActionServers(Node):
         feedback = Twist.Feedback()
         result = Twist.Result()
         self.gripper.send_command(2, 6, self.goal)
+
         self.gripper.send_command(0, 0, 0.0)
+
         feedback.current_offset = float(self.gripper.tw_offset)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.tw_status == 3:
             self.gripper.send_command(0, 0, 0.0)
+
             feedback.current_offset = float(self.gripper.tw_offset)
             goal_handle.publish_feedback(feedback)
 
@@ -273,7 +307,7 @@ class LoopOActionServers(Node):
         if self.gripper.lp_status == 0:
             self.gripper.send_command(3, 0, 1.0)
         if self.gripper.lp_control != 1:
-            self.gripper.send_command(3, 1, 1.0)
+            self.gripper.send_command(3, 1, 3.0)
 
     def loop_move_callback(self, goal_handle):
         self.loop_is_position_ready()
@@ -282,12 +316,12 @@ class LoopOActionServers(Node):
         result = Move.Result()
         self.gripper.send_command(3, 3, self.goal)
         self.gripper.send_command(0, 0, 0.0)
-        feedback.current_position = float(self.gripper.lp_position)
+        feedback.current_position = float(self.gripper.lp_size)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.lp_status == 3:
             self.gripper.send_command(0, 0, 0.0)
-            feedback.current_position = float(self.gripper.lp_position)
+            feedback.current_position = float(self.gripper.lp_size)
             goal_handle.publish_feedback(feedback)
 
         if self.gripper.lp_status == 1:
@@ -315,7 +349,7 @@ class LoopOActionServers(Node):
         feedback = Homing.Feedback()
         result = Homing.Result()
         self.gripper.send_command(3, 5, self.goal)
-        feedback.current_position = float(self.gripper.lp_position)
+        feedback.current_position = float(self.gripper.lp_size)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.lp_status == 2:
@@ -345,13 +379,13 @@ class LoopOActionServers(Node):
         result = Grasp.Result()
         self.gripper.send_command(3, 3, self.goal_width)
         self.gripper.send_command(0, 0, 0.0)
-        feedback.current_width = float(self.gripper.lp_position)
+        feedback.current_width = float(self.gripper.lp_size)
         feedback.current_force = float(self.gripper.force)
         goal_handle.publish_feedback(feedback)
 
         while self.gripper.lp_status == 3:
             self.gripper.send_command(0, 0, 0.0)
-            feedback.current_width = float(self.gripper.lp_position)
+            feedback.current_width = float(self.gripper.lp_size)
             feedback.current_force = float(self.gripper.force)
             goal_handle.publish_feedback(feedback)
 
@@ -369,14 +403,14 @@ class LoopOActionServers(Node):
 
         while self.gripper.lp_status != 6:
             self.gripper.send_command(0, 0, 0.0)
-            feedback.current_width = float(self.gripper.lp_position)
+            feedback.current_width = float(self.gripper.lp_size)
             feedback.current_force = float(self.gripper.force)
             goal_handle.publish_feedback(feedback)
 
         result.success = True
         result.error = "Loop is stuck"
         self.get_logger().info("Error: %s" % (result.error))
-        goal_handle.succed()
+        goal_handle.succeed()
 
         return result
 
