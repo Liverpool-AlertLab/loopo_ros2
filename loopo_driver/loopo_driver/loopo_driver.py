@@ -247,6 +247,17 @@ class LoopODriver:
         self.__send(self.EXTESION, self.SET_POSITION, postion)
         self.__receive()
 
+    def home_extension(self, speed=10.0):
+        """Start the homing procedure fopr the extension device
+
+        Parameters
+        ----------
+            speed: float
+                homing speed
+        """
+        self.__send(self.EXTESION, self.HOME, speed)
+        self.__receive()
+
     def set_twist_size(self, size=0.0):
         """Set the target size for the twist device
 
@@ -269,6 +280,17 @@ class LoopODriver:
         self.__send(self.TWIST, self.SET_TWIST, twist)
         self.__receive()
 
+    def home_twist(self, speed=10.0):
+        """Start the homing procedure fopr the twist device
+
+        Parameters
+        ----------
+            speed: float
+                homing speed
+        """
+        self.__send(self.TWIST, self.HOME, speed)
+        self.__receive()
+
     def set_loop_size(self, size=0.0):
         """Set the target size for the loop device
 
@@ -289,4 +311,15 @@ class LoopODriver:
                 target force
         """
         self.__send(self.LOOP, self.SET_FORCE, force)
+        self.__receive()
+
+    def home_loop(self, speed=10.0):
+        """Start the homing procedure fopr the loop device
+
+        Parameters
+        ----------
+            speed: float
+                homing speed
+        """
+        self.__send(self.LOOP, self.HOME, speed)
         self.__receive()
