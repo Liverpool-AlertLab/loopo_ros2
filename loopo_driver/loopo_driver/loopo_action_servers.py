@@ -1,6 +1,6 @@
 import rclpy
 
-from loopo_driver import LoopODriver
+from loopo_driver.loopo_driver import LoopODriver
 
 from rclpy.action import ActionServer
 from rclpy.node import Node
@@ -186,7 +186,8 @@ class LoopOActionServers(Node):
         return result
 
     def twist_grasp_callback(self, goal_handle):
-        self.loop_is_position_ready()
+        self.gripper.enable(self.gripper.TWIST)
+        self.gripper.switch_to_position_control(self.gripper.TWIST)
         self.goal_width = float(goal_handle.request.width)
         self.goal_force = float(goal_handle.request.force)
         feedback = Grasp.Feedback()
@@ -357,7 +358,7 @@ class LoopOActionServers(Node):
             goal_handle.abort()
 
         self.gripper.set_force(self.goal_force)
-        self.switch_to_force_control()
+        self.gripper.switch_to_force_control()
 
         while self.gripper.force < self.goal_force:
             self.gripper.update()
