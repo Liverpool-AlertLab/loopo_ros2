@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 
 from loopo_driver.loopo_driver import LoopODriver
@@ -5,7 +7,7 @@ from loopo_driver.loopo_driver import LoopODriver
 from rclpy.action import ActionServer
 from rclpy.node import Node
 
-from loopo_messages.action import Move, Homing, Grasp, Twist
+from loopo_interfaces.action import Move, Homing, Grasp, Twist
 
 
 class LoopOActionServers(Node):

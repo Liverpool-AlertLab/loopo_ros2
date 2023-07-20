@@ -23,6 +23,7 @@ class LoopODriver:
         """
         self._com_port = com_port
         self._baud = baud
+
         self._serial_interface = serial.Serial(self._com_port, self._baud, timeout=1)
 
         self.EXTESION = 1

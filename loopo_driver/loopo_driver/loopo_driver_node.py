@@ -2,7 +2,7 @@
 
 from loopo_driver.loopo_driver import LoopODriver
 
-from loopo_messages.srv import SendCommand
+from loopo_interfaces.srv import SendCommand
 
 import rclpy
 from rclpy.node import Node
@@ -10,12 +10,12 @@ from rclpy.node import Node
 
 class LoopODriverNode(Node):
     def __init__(self):
-        super().__init__('loopo_driver_node')
+        super().__init__("loopo_driver_node")
 
         self.gripper = LoopODriver()
-        self.command_service = self.create_service(SendCommand,
-                                                   'loopo_command',
-                                                   self.send_command)
+        self.command_service = self.create_service(
+            SendCommand, "loopo_command", self.send_command
+        )
 
     def gripper_update(self):
         self.gripper.update()
@@ -42,7 +42,6 @@ class LoopODriverNode(Node):
 
 
 def main(args=None):
-
     rclpy.init(args=args)
 
     loopo_driver_node = LoopODriverNode()
@@ -54,6 +53,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     main()
