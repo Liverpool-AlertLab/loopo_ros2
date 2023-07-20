@@ -380,7 +380,7 @@ class LoopOActionServers(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    loopo = LoopODriver(com_port="/dev/ttyACM1")
+    loopo = LoopODriver(com_port="/dev/ttyACM0")
 
     extension_action_server = LoopOActionServers(loopo_driver=loopo)
 
