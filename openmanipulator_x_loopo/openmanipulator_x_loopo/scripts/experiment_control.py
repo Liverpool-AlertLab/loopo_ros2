@@ -5,21 +5,17 @@ from open_manipulator_msgs.msg import KinematicsPose, OpenManipulatorState
 from open_manipulator_msgs.srv import SetJointPosition, SetKinematicsPose
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
+from rclpy.executors import MultiThreadedExecutor
 from sensor_msgs.msg import JointState
 
-present_joint_angle = [0.0, 0.0, 0.0, 0.0, 0.0]
-goal_joint_angle = [0.0, 0.0, 0.0, 0.0, 0.0]
-prev_goal_joint_angle = [0.0, 0.0, 0.0, 0.0, 0.0]
-present_kinematics_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-goal_kinematics_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-prev_goal_kinematics_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+import time
 
 
-class Experiment(Node):
+class Manipulator(Node):
     qos = QoSProfile(depth=10)
 
     def __init__(self):
-        super().__init__("experiment")
+        super().__init__("manipulator")
         key_value = ""
 
         # Create joint_states subscriber
@@ -53,6 +49,8 @@ class Experiment(Node):
         self.tool_control_req = SetJointPosition.Request()
 
         self.manipulator_moving_state = "STOPPED"
+        self.present_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.present_joint_angle = [0.0, 0.0, 0.0, 0.0, 0.0]
 
     def send_goal_pose(
         self,
@@ -75,7 +73,7 @@ class Experiment(Node):
         except Exception as e:
             self.get_logger().info("Sending Goal Kinematic Pose failed %r" % (e,))
 
-    def send_goal_joint(self, path_time):
+    def send_goal_joint(self, angles=[0.0, 0.0, 0.0, 1.57, 0.0], path_time=1.0):
         self.goal_joint_req.joint_position.joint_name = [
             "joint1",
             "joint2",
@@ -84,11 +82,11 @@ class Experiment(Node):
             "gripper",
         ]
         self.goal_joint_req.joint_position.position = [
-            goal_joint_angle[0],
-            goal_joint_angle[1],
-            goal_joint_angle[2],
-            goal_joint_angle[3],
-            goal_joint_angle[4],
+            angles[0],
+            angles[1],
+            angles[2],
+            angles[3],
+            angles[4],
         ]
         self.goal_joint_req.path_time = path_time
 
@@ -99,7 +97,9 @@ class Experiment(Node):
         except Exception as e:
             self.get_logger().info("Sending Goal Joint failed %r" % (e,))
 
-    def send_tool_control_request(self, path_time):
+    def send_tool_control_request(
+        self, angles=[0.0, 0.0, 0.0, 1.57, 0.0], path_time=1.0
+    ):
         self.tool_control_req.joint_position.joint_name = [
             "joint1",
             "joint2",
@@ -108,11 +108,11 @@ class Experiment(Node):
             "gripper",
         ]
         self.tool_control_req.joint_position.position = [
-            goal_joint_angle[0],
-            goal_joint_angle[1],
-            goal_joint_angle[2],
-            goal_joint_angle[3],
-            goal_joint_angle[4],
+            angles[0],
+            angles[1],
+            angles[2],
+            angles[3],
+            angles[4],
         ]
         self.tool_control_req.path_time = path_time
 
@@ -125,109 +125,84 @@ class Experiment(Node):
             self.get_logger().info("Tool control failed %r" % (e,))
 
     def kinematics_pose_callback(self, msg):
-        present_kinematics_pose[0] = msg.pose.position.x
-        present_kinematics_pose[1] = msg.pose.position.y
-        present_kinematics_pose[2] = msg.pose.position.z
-        present_kinematics_pose[3] = msg.pose.orientation.w
-        present_kinematics_pose[4] = msg.pose.orientation.x
-        present_kinematics_pose[5] = msg.pose.orientation.y
-        present_kinematics_pose[6] = msg.pose.orientation.z
+        self.present_pose[0] = msg.pose.position.x
+        self.present_pose[1] = msg.pose.position.y
+        self.present_pose[2] = msg.pose.position.z
+        self.present_pose[3] = msg.pose.orientation.w
+        self.present_pose[4] = msg.pose.orientation.x
+        self.present_pose[5] = msg.pose.orientation.y
+        self.present_pose[6] = msg.pose.orientation.z
 
     def joint_state_callback(self, msg):
-        present_joint_angle[0] = msg.position[0]
-        present_joint_angle[1] = msg.position[1]
-        present_joint_angle[2] = msg.position[2]
-        present_joint_angle[3] = msg.position[3]
-        present_joint_angle[4] = msg.position[4]
+        self.present_joint_angle[0] = msg.position[0]
+        self.present_joint_angle[1] = msg.position[1]
+        self.present_joint_angle[2] = msg.position[2]
+        self.present_joint_angle[3] = msg.position[3]
+        self.present_joint_angle[4] = msg.position[4]
 
     def open_manipulator_state_callback(self, msg):
         self.manipulator_moving_state = msg.open_manipulator_moving_state
-        if msg.open_manipulator_moving_state == "STOPPED":
-            for index in range(0, 7):
-                goal_kinematics_pose[index] = present_kinematics_pose[index]
-            for index in range(0, 5):
-                goal_joint_angle[index] = present_joint_angle[index]
 
-    def print_present_values():
-        print(
-            "Joint Angle(Rad): [{:.3f}, {:.3f}, {:.3f}, {:.3f}, {:.3f}]".format(
-                present_joint_angle[0],
-                present_joint_angle[1],
-                present_joint_angle[2],
-                present_joint_angle[3],
-                present_joint_angle[4],
-            )
-        )
-        print(
-            "Kinematics Pose(Pose X, Y, Z | Orientation W, X, Y, Z): {:.3f}, {:.3f}, {:.3f} | {:.3f}, {:.3f}, {:.3f}, {:.3f}".format(
-                present_kinematics_pose[0],
-                present_kinematics_pose[1],
-                present_kinematics_pose[2],
-                present_kinematics_pose[3],
-                present_kinematics_pose[4],
-                present_kinematics_pose[5],
-                present_kinematics_pose[6],
-            )
-        )
+
+try:
+    rclpy.init()
+except Exception as e:
+    print(e)
+
+try:
+    manipulator = Manipulator()
+except Exception as e:
+    print(e)
+
+
+def wait_for_movement():
+    while manipulator.manipulator_moving_state == "STOPPED":
+        rclpy.spin_once(manipulator)
+    while manipulator.manipulator_moving_state == "IS_MOVING":
+        rclpy.spin_once(manipulator)
+
+
+def move2xyz(pos=[0.0, 0.1, 0.05], path_time=1.0):
+    manipulator.send_goal_pose(position=pos, path_time=path_time)
+    rclpy.spin_until_future_complete(manipulator, manipulator.future_goal_pose)
+    time.sleep(path_time)
 
 
 def main():
     try:
-        rclpy.init()
-    except Exception as e:
-        print(e)
+        manipulator.send_goal_joint([0.0, 0.0, 0.0, 1.57, 0.05], 3.0)
+        rclpy.spin_until_future_complete(manipulator, manipulator.future_joint_goal)
 
-    try:
-        experiment = Experiment()
-    except Exception as e:
-        print(e)
+        manipulator.get_logger().info("joint command sent")
 
-    counter = 0
+        wait_for_movement()
 
-    try:
-        goal_joint_angle[0] = 0.0
-        goal_joint_angle[1] = 0.0
-        goal_joint_angle[2] = 0.0
-        goal_joint_angle[3] = 1.57
+        manipulator.get_logger().info("pose command sent")
+        move2xyz([0.1, 0.1, 0.1], 1.0)
 
-        experiment.send_goal_joint(3.0)
-        rclpy.spin_until_future_complete(experiment, experiment.future_joint_goal)
+        manipulator.get_logger().info("pose command sent")
+        move2xyz([0.1, 0.1, 0.05], 1.0)
 
-        experiment.get_logger().info("joint command sent")
+        manipulator.send_tool_control_request([0.0, 0.0, 0.0, 1.57, 0.01], 1.0)
+        rclpy.spin_until_future_complete(manipulator, manipulator.future_joint_goal)
+        time.sleep(1.0)
 
-        while experiment.manipulator_moving_state == "STOPPED":
-            rclpy.spin_once(experiment)
-        while experiment.manipulator_moving_state == "IS_MOVING":
-            rclpy.spin_once(experiment)
+        manipulator.get_logger().info("tool command sent")
 
-        experiment.get_logger().info("pose command sent")
-        experiment.send_goal_pose([0.1, 0.1, 0.1], path_time=1.0)
-        rclpy.spin_until_future_complete(experiment, experiment.future_goal_pose)
+        while manipulator.manipulator_moving_state == "IS_MOVING":
+            rclpy.spin_once(manipulator)
 
-        while experiment.manipulator_moving_state == "STOPPED":
-            rclpy.spin_once(experiment)
-        while experiment.manipulator_moving_state == "IS_MOVING":
-            rclpy.spin_once(experiment)
+        manipulator.get_logger().info("pose command sent")
+        move2xyz([0.2, 0.0, 0.0], 1.0)
 
-        experiment.get_logger().info("pose command sent")
-        experiment.send_goal_pose([0.1, 0.1, -0.05], path_time=1.0)
-        rclpy.spin_until_future_complete(experiment, experiment.future_goal_pose)
+        manipulator.send_tool_control_request([0.0, 0.0, 0.0, 1.57, -0.005], 1.0)
+        rclpy.spin_until_future_complete(manipulator, manipulator.future_joint_goal)
+        manipulator.get_logger().info("tool command sent")
+        time.sleep(1.0)
 
-        while experiment.manipulator_moving_state == "STOPPED":
-            rclpy.spin_once(experiment)
-        while experiment.manipulator_moving_state == "IS_MOVING":
-            rclpy.spin_once(experiment)
+        move2xyz([0.2, 0.0, -0.02])
 
-        experiment.get_logger().info("pose command sent")
-        experiment.send_goal_pose([0.2, 0.0, 0.0], path_time=1.0)
-        rclpy.spin_until_future_complete(experiment, experiment.future_goal_pose)
-
-        while experiment.manipulator_moving_state == "STOPPED":
-            rclpy.spin_once(experiment)
-        while experiment.manipulator_moving_state == "IS_MOVING":
-            rclpy.spin_once(experiment)
-
-        experiment.get_logger().info("finished")
+        manipulator.get_logger().info("finished")
 
     except Exception as e:
         print(e)
