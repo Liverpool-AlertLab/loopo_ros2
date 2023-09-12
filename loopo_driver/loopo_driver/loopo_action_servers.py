@@ -31,8 +31,8 @@ class LoopOActionServers(Node):
         self.get_logger().info("Loop-O action servers started and ready.")
 
     def loop_move_callback(self, goal_handle):
-        self.gripper.enable(self.gripper.LOOP)
-        self.gripper.switch_to_position_control(self.gripper.LOOP)
+        self.gripper.enable()
+        self.gripper.switch_to_position_control()
         self.goal_size = float(goal_handle.request.target)
         feedback = Move.Feedback()
         result = Move.Result()
@@ -67,7 +67,7 @@ class LoopOActionServers(Node):
         return result
 
     def loop_home_callback(self, goal_handle):
-        self.gripper.enable(self.gripper.LOOP)
+        self.gripper.enable()
         self.homing_speed = float(goal_handle.request.speed)
         feedback = Homing.Feedback()
         result = Homing.Result()
@@ -96,8 +96,8 @@ class LoopOActionServers(Node):
         return result
 
     def loop_grasp_callback(self, goal_handle):
-        self.gripper.enable(self.gripper.LOOP)
-        self.gripper.switch_to_position_control(self.gripper.LOOP)
+        self.gripper.enable()
+        self.gripper.switch_to_position_control()
         self.goal_width = float(goal_handle.request.width)
         self.goal_force = float(goal_handle.request.force)
         feedback = Grasp.Feedback()

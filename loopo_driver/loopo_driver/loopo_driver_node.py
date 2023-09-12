@@ -24,15 +24,6 @@ class LoopODriverNode(Node):
     def send_command(self, request, response):
         self.gripper.send_command(request.id, request.command, request.value)
 
-        response.ex_position = self.gripper.ex_position
-        response.ex_status = self.gripper.ex_status
-        response.ex_control = self.gripper.ex_control
-
-        response.tw_size + self.gripper.tw_size
-        response.tw_offset = self.gripper.tw_offset
-        response.tw_status = self.gripper.tw_statuts
-        response.tw_control = self.gripper.tw_control
-
         response.lp_size = self.gripper.lp_size
         response.lp_force = self.gripper.force
         response.lp_status = self.gripper.lp_status

@@ -44,21 +44,12 @@ class LoopODriver:
         self.VELOCITY = 2.0
         self.FORCE = 3.0
 
-        self.extension_position = 0
-        self.extension_status = 0
-        self.extension_control = 0
-
-        self.twist_size = 0
-        self.twist_offset = 0
-        self.twist_status = 0
-        self.twist_control = 0
-
         self.loop_size = 0
         self.force = 0.53
         self.loop_status = 0
         self.loop_control = 0
 
-    def __send(self, id=None, command=None, value=None):
+    def __send(self, command=None, value=None):
         """Internal method that formats and send command to the Loop-0
 
         Parameters
@@ -66,8 +57,6 @@ class LoopODriver:
         id: int
             identity of the device to send the command to
             0 - No Device
-            1 - Extension
-            2 - Twist
             3 - Loop
             sending 0 will prompt a reply from the device.
         command: int
@@ -99,19 +88,10 @@ class LoopODriver:
 
         values = re.findall(r"\d+(?:\.\d+)?", line)
 
-        self.extensionposition = int(values[0])
-        self.extensionstatus = int(values[1])
-        self.extensioncontrol = int(values[2])
-
-        self.twist_size = int(values[3])
-        self.twist_offset = int(values[4])
-        self.twist_status = int(values[5])
-        self.twist_control = int(values[6])
-
-        self.loop_size = int(values[7])
-        self.force = float(values[8])
-        self.loop_status = int(values[9])
-        self.loop_control = int(values[10])
+        self.loop_size = int(values[0])
+        self.force = float(values[1])
+        self.loop_status = int(values[2])
+        self.loop_control = int(values[3])
 
     def send_command(self, id=None, command=None, value=None):
         """Internal method that formats and send command to the Loop-0 and updates the class with the reply
@@ -121,8 +101,6 @@ class LoopODriver:
         id: int
             identity of the device to send the command to
             0 - No Device
-            1 - Extension
-            2 - Twist
             3 - Loop
             sending 0 will prompt a reply from the device.
         command: int
@@ -153,143 +131,34 @@ class LoopODriver:
         self._serial_interface.flush()
         self.__receive()
 
-    def enable(self, id=0):
-        """Send enable command to a device
-
-        Parameters
-        ----------
-        id: int
-            identity of the device to send the command to
-            1 - Extension
-            2 - Twist
-            3 - Loop
-        """
-        self.__send(id, self.SET_ENABLE, 1.0)
+    def enable(self):
+        """Send enable command to the device"""
+        self.__send(3, self.SET_ENABLE, 1.0)
         self.__receive()
 
-    def disable(self, id=0):
-        """Send disable command to a device
-
-        Parameters
-        ----------
-        id: int
-            identity of the device to send the command to
-            1 - Extension
-            2 - Twist
-            3 - Loop
-        """
-        self.__send(id, self.SET_ENABLE, 0.0)
+    def disable(self):
+        """Send disable command to the device"""
+        self.__send(0, self.SET_ENABLE, 0.0)
         self.__receive()
 
-    def switch_to_speed_control(self, id=0):
-        """Switch a device to speed control
-
-        Parameters
-        ----------
-        id: int
-            identity of the device to send the command to
-            1 - Extension
-            2 - Twist
-            3 - Loop
-        """
-        self.__send(id, self.SET_CONTROL, self.SPEED)
+    def switch_to_speed_control(self):
+        """Switch the device to speed control"""
+        self.__send(0, self.SET_CONTROL, self.SPEED)
         self.__receive()
 
-    def switch_to_position_control(self, id=0):
-        """Switch a device to position control
-
-        Parameters
-        ----------
-        id: int
-            identity of the device to send the command to
-            1 - Extension
-            2 - Twist
-            3 - Loop
-        """
-        self.__send(id, self.SET_CONTROL, self.POSITION)
+    def switch_to_position_control(self):
+        """Switch the device to position control"""
+        self.__send(0, self.SET_CONTROL, self.POSITION)
         self.__receive()
 
-    def switch_to_velocity_control(self, id=0):
-        """Switch a device to velocity control
-
-        Parameters
-        ----------
-        id: int
-            identity of the device to send the command to
-            1 - Extension
-            2 - Twist
-            3 - Loop
-        """
-        self.__send(id, self.SET_CONTROL, self.VELOCITY)
+    def switch_to_velocity_control(self):
+        """Switch a device to velocity control"""
+        self.__send(0, self.SET_CONTROL, self.VELOCITY)
         self.__receive()
 
     def switch_to_force_control(self):
-        """Switch a device to position control
-
-        Parameters
-        ----------
-        id: int
-            identity of the device to send the command to
-            1 - Extension
-            2 - Twist
-            3 - Loop
-        """
+        """Switch a device to position control"""
         self.__send(self.LOOP, self.SET_CONTROL, self.FORCE)
-        self.__receive()
-
-    def set_extension_position(self, postion=0.0):
-        """Set the target postion for the extension device
-
-        Parameters
-        ----------
-            position: float
-                target postion
-        """
-        self.__send(self.EXTESION, self.SET_POSITION, postion)
-        self.__receive()
-
-    def home_extension(self, speed=10.0):
-        """Start the homing procedure fopr the extension device
-
-        Parameters
-        ----------
-            speed: float
-                homing speed
-        """
-        self.__send(self.EXTESION, self.HOME, speed)
-        self.__receive()
-
-    def set_twist_size(self, size=0.0):
-        """Set the target size for the twist device
-
-        Parameters
-        ----------
-            position: int
-                target postion
-        """
-        self.__send(self.TWIST, self.SET_POSITION, size)
-        self.__receive()
-
-    def set_twist(self, twist=0.0):
-        """Set the target offset for the twist device
-
-        Parameters
-        ----------
-            position: int
-                target postion
-        """
-        self.__send(self.TWIST, self.SET_TWIST, twist)
-        self.__receive()
-
-    def home_twist(self, speed=10.0):
-        """Start the homing procedure fopr the twist device
-
-        Parameters
-        ----------
-            speed: float
-                homing speed
-        """
-        self.__send(self.TWIST, self.HOME, speed)
         self.__receive()
 
     def set_loop_size(self, size=0.0):
@@ -315,7 +184,7 @@ class LoopODriver:
         self.__receive()
 
     def home_loop(self, speed=10.0):
-        """Start the homing procedure fopr the loop device
+        """Start the homing procedure for the loop device
 
         Parameters
         ----------
